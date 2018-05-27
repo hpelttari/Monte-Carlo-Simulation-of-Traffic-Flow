@@ -13,39 +13,111 @@ vector<int> updateJumpRates(vector<int>,vector<bool>,int);
 vector<bool> moveCarOnRoad(int,vector<bool>);
 int findIndexOfPreviousCar(vector<bool>, int);
 int findIndexOfNextCar(vector<bool>, int);
+int findLastCar(vector<bool>);
+int findFirstCar(vector<bool>);
+vector<double> R(vector<int>,int);
+int findEventToCarryOut(vector<double>, mt19937&);
+double updateTime(int, double, mt19937&);
+
 
 int main(){
-
-  vector<bool> road =createInitialConfiguration(50, 100);
+  int N=100;
+  vector<bool> road =createInitialConfiguration(N, 200);
+  int firstCar=findFirstCar(road);
+  int lastCar=findLastCar(road);
   vector<int> jumpRates=createListOfJumpRates(road);
-  printTraffic(road);
+  /*printTraffic(road);
+    for(int i=0;i<jumpRates.size();i++){
+    cout<<jumpRates[i];//<<endl;
+  }
+  cout<<endl;
   road=moveCarOnRoad(1,road);
+  //firstCar=2;
   cout<<"\n";
   printTraffic(road);
-  cout<<"\n";
   jumpRates=updateJumpRates(jumpRates,road,2);
-  cout<<"\n";
   for(int i=0;i<jumpRates.size();i++){
-    cout<<jumpRates[i]<<endl;
+    cout<<jumpRates[i];//<<endl;
   }
+  cout<<endl;
   cout<<"\n";
-  moveCarOnRoad(5, road);
-  cout<<"ww"<<endl;
+  road=moveCarOnRoad(5, road);
   jumpRates=updateJumpRates(jumpRates,road,6);
-  cout<<"zz"<<endl;
-  cout<<"\n";
   printTraffic(road);
-  cout<<"\n";
-  cout<<"kk"<<endl;
   for(int i=0;i<jumpRates.size();i++){
-    cout<<jumpRates[i]<<endl;
+    cout<<jumpRates[i];
   }
+  cout<<endl;*/
+
+
+  //Main KMC loop
+  double t=0;
+  double MaxTime=1000000;
+  double carMoved=1;
+  vector<double> cumFunc(jumpRates.size());
+  mt19937 mt_rand(123);
+  for(int i=0;i<4000000;i++){
+    jumpRates=updateJumpRates(jumpRates,road,carMoved);
+    cumFunc=R(jumpRates,N);
+    carMoved=findEventToCarryOut(cumFunc,mt_rand);
+    //cout<<cumFunc[cumFunc.size()-1]<<endl;
+    road=moveCarOnRoad(carMoved,road);
+    t=updateTime(cumFunc[cumFunc.size()-1],t,mt_rand);
+    if(carMoved==road.size()-1){
+      carMoved=0;
+    }else{
+      carMoved++;
+    }
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+        printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+        printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+        printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+        printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    printTraffic(road);
+    
+  }
+
   
   return 0;
 }
 
 vector<bool> createInitialConfiguration(int N, int L){
   double density = (double)N/L;
+  cout<<"density="<<density<<" inverse="<<1/density<<endl;
   vector<bool> road(L);
   int counter=1;
   for(int i=0;i<L;i++){
@@ -58,6 +130,30 @@ vector<bool> createInitialConfiguration(int N, int L){
     counter++;
   }
   return road;
+}
+
+int findFirstCar(vector<bool> road){
+  int firstCar=0;
+  while(true){
+    if(road[firstCar]==true){
+      break;
+    }
+    firstCar++;
+  }
+
+  return firstCar;
+}
+
+int findLastCar(vector<bool> road){
+  int LastCar=road.size()-1;
+  while(true){
+    if(road[LastCar]==true){
+      break;
+    }
+    LastCar--;
+  }
+
+  return LastCar;
 }
 
 void printTraffic(vector<bool> road){
@@ -73,65 +169,82 @@ void printTraffic(vector<bool> road){
     
 vector<int> createListOfJumpRates(vector<bool> road){
   vector<int> jumpRates(road.size());
-  for(int i=0;i<road.size();i++){
-    jumpRates[i]=0;
-    if(road[i]==true){
-      int j=i+1;
-      int f=0;
-      while(j<road.size()){
-	if(road[j]==true){
+  for(int car=0;car<road.size();car++){
+    jumpRates[car]=0;
+    //Check if the position on the road contains a car
+    if(road[car]==true){
+      int position=car+1;
+      int rate=0;
+      //add to the jump rate until a next car
+      while(position<road.size()){
+	if(road[position]==true){
 	  break;
 	}
-	f++;
-	jumpRates[i]=f;
-	j++;
+	rate++;
+	jumpRates[car]=rate;
+	position++;
       }
     }
   }
+  if(road[jumpRates.size()-1]==true){
+      int rate=0;
+      int position=0;
+      while(true){
+	if(road[position]==true){
+	  jumpRates[jumpRates.size()-1]=rate;
+	  break;
+	}
+	rate++;
+	position++;
+      }
+    }
   return jumpRates;
 }
 
 vector<int> updateJumpRates(vector<int> jumpRates,vector<bool> road, int car){
+  if(car>0){
   jumpRates[car-1]=0;
-  /*
-  int f=0;
-  for(int i=indexOfCarMoved+1;i<road.size();i++){
-    if(road[i]==true){
+  } else{
+    jumpRates[jumpRates.size()-1]=0;
+  }
+  int position=car+1;
+
+
+  
+  if(position==jumpRates.size()){
+    position=0;
+  }
+  int rate=0;
+  //update jump rate of the car moved
+  while(true){
+    if(road[position]==true){
+          jumpRates[car]=rate;
+	break;
+      }
+    rate++;
+    position++;
+    if(position==jumpRates.size()){
+      position=0;
+    }
+  }
+  rate=0;
+  position=car-1;
+  //update the jump rate of the previous car
+  if(position<0){
+    position=jumpRates.size()-1;
+  }
+  while(true){
+    if(road[position]==true){
+      jumpRates[position]=rate;
       break;
     }
-    f++;
+    rate++;
+    position--;
+  if(position<0){
+    position=jumpRates.size()-1;
   }
-  jumpRates[indexOfCarMoved]=f;
-  f=0;
-  int carBefore;
-  for(int i=indexOfCarMoved-1;i>=0;i--){
-    
-    if(road[i]==true){
-      break;
-    }
-    carBefore=indexOfCarMoved-1;
-    f++;
   }
-  if(carBefore!=0){
-  jumpRates[carBefore]=f;
-   cout<<"lol"<<endl;
-  } else if(road[0]==true){
-    jumpRates[carBefore]=f;
-  } else{
-    jumpRates[carBefore]=0;
-    }*/
-  int nextCar=findIndexOfNextCar(road, car);
-  int previousCar=findIndexOfPreviousCar(road, car);
-  if(nextCar>car){
-    jumpRates[car]=nextCar-car-1;
-  } else{
-    jumpRates[car]=(road.size()-car-1)+nextCar;
-  }
-  if(previousCar>car){
-    jumpRates[previousCar]=car-previousCar-1;
-  }else{
-    jumpRates[previousCar]=(road.size()-previousCar-1)+car;
-  }
+
   return jumpRates;
 }
 
@@ -171,9 +284,61 @@ vector<bool> moveCarOnRoad(int car,vector<bool> road){
   if(car<road.size()-1&&road[car+1]==0){
     road[car]=0;
     road[car+1]=1;
-  } else{
+  }/* else{
     cout<<"Can't move the car"<<endl;
+    }*/
+  if(car==road.size()-1&&road[0]==0){
+    road[car]=0;
+    road[0]=1;
   }
 
   return road;
+}
+
+vector<double> R(vector<int> jumpRates,int N){
+  vector<double> r(jumpRates.size());
+  double sum=0;
+  for(int i=0;i<jumpRates.size();i++){
+    sum+=jumpRates[i];
+    r[i]=sum;
+    //cout<<r[i];
+  }
+  //cout<<endl;
+
+  return r;
+}
+
+int findEventToCarryOut(vector<double> R, mt19937& mt_rand){
+  int event=0;
+  double u=R[R.size()-1]*(double)mt_rand()/mt_rand.max();
+  bool b;
+  int j=0;
+  //if(R[0]!=0&&R[1]<=u)
+  
+  while(R[j]==0){
+  j++;
+  }
+  int z;
+  for(int i=j;i<R.size();i++){
+    z=i;
+    b=(R[i]<=u);
+    //cout<<" i="<<i<<" R="<<R[i]<<" u="<<u<<" true="<<b<<endl;
+    if(R[i-1]<u&&u<=R[i]){
+      event=i;
+      break;
+    }
+
+  }
+  //cout<<"z="<<z<<endl;
+
+  //cout<<"\nevent="<<event<<endl;
+
+  return event;
+}
+
+double updateTime(int R,double t,mt19937& mt_rand){
+  double u=(double)mt_rand()/mt_rand.max();
+  t+=-log(u)/R;
+
+  return t;
 }
